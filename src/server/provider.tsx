@@ -1,4 +1,4 @@
-import type { FunctionComponent, ReactNode } from "react";
+import React, { FunctionComponent, ReactNode } from "react";
 import { ClientProvider } from "../client/provider";
 import { auth } from "./utils";
 

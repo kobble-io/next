@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthMiddlewareOptions } from "./types";
 
 export type IdTokenPayload = {
 	sub: string;
@@ -17,8 +16,15 @@ export type IdTokenPayload = {
 	aud: string;
 }
 
-export type RouteHandler = (req: NextRequest, options: AuthMiddlewareOptions) => Promise<NextResponse> | NextResponse;
+export type RouteHandler = (req: NextRequest, options: AuthMiddlewareConfig) => Promise<NextResponse> | NextResponse;
 
 export type OAuthState = {
 	origin: string;
+}
+
+export type AuthMiddlewareConfig = {
+	portalUrl: string;
+	clientId: string;
+	clientSecret: string;
+	redirectUri: string;
 }

@@ -9,7 +9,6 @@ export type KobbleAuth = {
 export type AuthMiddlewareOptions = {
 	publicRoutes?: string[];
 	unauthenticatedRedirectPath?: string;
-	kobbleRoutesBasePath?: string;
 	loggedOutRedirectPath?: string;
 	loggedInRedirectPath?: string;
 }

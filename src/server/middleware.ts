@@ -1,52 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ACCESS_TOKEN_COOKIE_NAME, DEFAULT_OAUTH_SCOPE, ID_TOKEN_COOKIE_NAME } from "./constants";
-import { OAuthState } from "./internal-types";
 import { AuthMiddlewareOptions } from "./types";
 import { auth } from "./utils";
+import { AuthMiddlewareConfig } from "./internal-types";
+import { jwtParseClaims } from "../utils/jwt";
 
-const serializeState = (state: OAuthState) => {
-	const params = new URLSearchParams();
-
-	for (const [key, value] of Object.entries(state)) {
-		params.append(key, value);
-	}
-
-	return btoa(params.toString());
-}
-
-const deserializeState = (state: string): OAuthState => {
-	const params = new URLSearchParams(atob(state));
-
-	return Object.fromEntries(params.entries()) as OAuthState;
-}
-
-const createAuthorizationUrl = (state: OAuthState): URL => {
-	const url = new URL('/oauth/authorize', process.env.KOBBLE_DOMAIN);
-	const serializedState = serializeState(state);
+const createAuthorizationUrl = (config: AuthMiddlewareConfig): URL => {
+	const { clientId, portalUrl, redirectUri } = config;
+	const url = new URL('/oauth/authorize', portalUrl);
 
 	url.searchParams.set('response_type', 'code');
-	url.searchParams.set('client_id', process.env.KOBBLE_CLIENT_ID!);
-	url.searchParams.set('client_secret', process.env.KOBBLE_CLIENT_SECRET!);
-	url.searchParams.set('redirect_uri', process.env.KOBBLE_REDIRECT_URI!);
-	url.searchParams.set('state', serializedState);
+	url.searchParams.set('client_id', clientId);
+	url.searchParams.set('redirect_uri', redirectUri);
 	url.searchParams.set('scope', DEFAULT_OAUTH_SCOPE);
+	url.searchParams.set('state', 'kobble');
 
 	return url;
 }
 
-const handleLogin = async (request: NextRequest, options: AuthMiddlewareOptions) => {
+const handleLogin = async (request: NextRequest, config: AuthMiddlewareConfig, options: AuthMiddlewareOptions) => {
 	const url = request.nextUrl.clone();
 
 	url.pathname = options.loggedInRedirectPath ?? '/';
 
-	const authorizationUrl = createAuthorizationUrl(
-		{ origin: url.toString() }	
-	);
+	const authorizationUrl = createAuthorizationUrl(config);
 
 	return NextResponse.redirect(authorizationUrl);
 }
 
-const handleOAuthCallback = async (request: NextRequest, _: AuthMiddlewareOptions) => {
+const handleOAuthCallback = async (request: NextRequest, config: AuthMiddlewareConfig, options: AuthMiddlewareOptions) => {
 	const code = request.nextUrl.searchParams.get('code');
 
 	if (!code) {
@@ -59,13 +41,14 @@ const handleOAuthCallback = async (request: NextRequest, _: AuthMiddlewareOption
 		return NextResponse.json({ message: 'missing state' });
 	}
 
-	const state = deserializeState(serializedState);
-	const tokenUrl = new URL('/api/oauth/token', process.env.KOBBLE_DOMAIN);
+	const {  clientId, portalUrl, redirectUri, clientSecret } = config;
+
+	const tokenUrl = new URL('/api/oauth/token', portalUrl);
 	const payload = new URLSearchParams({
 		code,
-		client_id: process.env.KOBBLE_CLIENT_ID!,
-		client_secret: process.env.KOBBLE_CLIENT_SECRET!,
-		redirect_uri: process.env.KOBBLE_REDIRECT_URI!,
+		client_id: clientId,
+		client_secret: clientSecret,
+		redirect_uri: redirectUri,
 		grant_type: 'authorization_code',
 	});
 
@@ -90,8 +73,13 @@ const handleOAuthCallback = async (request: NextRequest, _: AuthMiddlewareOption
 		});
 	}
 
-	const { access_token, id_token } = await res.json();
-	const nextRes = NextResponse.redirect(state.origin);
+	const { access_token, id_token, refresh_token } = await res.json();
+
+	const resUrl = request.nextUrl.clone();
+
+	resUrl.pathname = options.loggedInRedirectPath ?? '/';
+
+	const nextRes = NextResponse.redirect(resUrl);
 
 	nextRes.cookies.set(ACCESS_TOKEN_COOKIE_NAME, access_token, {
 		httpOnly: true,
@@ -107,7 +95,56 @@ const handleOAuthCallback = async (request: NextRequest, _: AuthMiddlewareOption
 	return nextRes;
 }
 
-const handleLogout = (request: NextRequest, options: AuthMiddlewareOptions) => {
+const refreshAccessToken = async (config: AuthMiddlewareConfig, refreshToken: string) => {
+	const { clientId, portalUrl, clientSecret } = config;
+
+	const tokenUrl = new URL('/api/oauth/token', portalUrl);
+
+	const payload = new URLSearchParams({
+		refresh_token: refreshToken,
+		client_id: clientId,
+		client_secret: clientSecret,
+		grant_type: 'refresh_token',
+	});
+
+	const res = await fetch(tokenUrl, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+		},
+		body: payload.toString()
+	});
+
+	if (!res.ok) {
+		const text = await res.text();
+		console.error('Failed to refresh token', res.status, text);
+
+		return null;
+	}
+}
+
+const handleGetToken = async (request: NextRequest, config: AuthMiddlewareConfig, options: AuthMiddlewareOptions) => {
+	if (request.method !== 'GET') {
+		return NextResponse.json({ message: 'method not allowed'}, { status: 405 });
+	}
+	
+	const { accessToken } = auth();
+
+	if (!accessToken) {
+		return NextResponse.json({ message: 'missing access token' });
+	}
+
+	const payload = jwtParseClaims<{ exp: number }>(accessToken);
+
+	// refresh token if it expires in less than an hour
+	if (payload.exp < Date.now() / 1000 + 3600) {
+		return NextResponse.json({ message: 'token refresh is not implemented yet.' });
+	}
+
+	return NextResponse.json({ accessToken });
+}
+
+const handleLogout = (request: NextRequest, _: AuthMiddlewareConfig, options: AuthMiddlewareOptions) => {
 	const resUrl = request.nextUrl.clone();
 
 	resUrl.pathname = options.loggedOutRedirectPath ?? '/';
@@ -124,12 +161,48 @@ const kobblePath = (base: string, path: string) => {
 	return `${base}${path}`;
 }
 
-export const authMiddleware = (options: AuthMiddlewareOptions = {}) => {
-	const { publicRoutes = [], unauthenticatedRedirectPath, kobbleRoutesBasePath = '/' } = options;
+const loadMiddlewareConfigOrThrow = (): AuthMiddlewareConfig => {
+	const clientId = process.env.NEXT_PUBLIC_KOBBLE_CLIENT_ID;
+
+	if (!clientId) {
+		throw new Error('Missing NEXT_PUBLIC_KOBBLE_CLIENT_ID');
+	}
+
+	const portalUrl = process.env.NEXT_PUBLIC_KOBBLE_DOMAIN;
+
+	if (!portalUrl) {
+		throw new Error('Missing NEXT_PUBLIC_KOBBLE_DOMAIN');
+	}
+
+	const redirectUri = process.env.NEXT_PUBLIC_KOBBLE_REDIRECT_URI;
+
+	if (!redirectUri) {
+		throw new Error('Missing NEXT_PUBLIC_KOBBLE_REDIRECT_URI');
+	}
+
+	const clientSecret = process.env.KOBBLE_CLIENT_SECRET;
+
+	if (!clientSecret) {
+		throw new Error('Missing KOBBLE_CLIENT_SECRET');
+	}
+
+	return {
+		clientId,
+		portalUrl,
+		redirectUri,
+		clientSecret,
+	};
+}
+
+export const authMiddleware = (options: AuthMiddlewareOptions) => {
+	const config = loadMiddlewareConfigOrThrow();
+	const { publicRoutes = [], unauthenticatedRedirectPath } = options;
+	const oauthCallbackPath = new URL(config.redirectUri).pathname;
 	const kobbleRoutes = {
-		[kobblePath(kobbleRoutesBasePath, 'logout')]: handleLogout,
-		[kobblePath(kobbleRoutesBasePath, 'login')]: handleLogin,
-		[kobblePath(kobbleRoutesBasePath, 'oauth/callback')]: handleOAuthCallback,
+		'/login': handleLogin,
+		'/logout': handleLogout,
+		'/getToken': handleGetToken,
+		[oauthCallbackPath]: handleOAuthCallback,
 	};
 
 	return (request: NextRequest) => {
@@ -143,7 +216,7 @@ export const authMiddleware = (options: AuthMiddlewareOptions = {}) => {
 		}
 
 		if (kobbleRoutes[currentPath]) {
-			return kobbleRoutes[currentPath](request, options);
+			return kobbleRoutes[currentPath](request, config, options);
 		}
 
 		const { user } = auth();
@@ -160,7 +233,6 @@ export const authMiddleware = (options: AuthMiddlewareOptions = {}) => {
 			return NextResponse.redirect(url);
 		}
 
-
-		return handleLogin(request, options);
+		return handleLogin(request, config, options);
 	}
 }
