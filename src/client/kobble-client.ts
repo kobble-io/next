@@ -1,7 +1,7 @@
 //const API_URL = 'https://client-sdk-backend-mtppn576oq-uc.a.run.app';
 const API_URL = 'http://localhost:3005';
 
-class KobbleClient {
+export class KobbleClient {
 	private cachedAccessToken : string | null = null;
 
 	private async getAccessToken(): Promise<string> {
@@ -86,5 +86,3 @@ class KobbleClient {
 		return data.token;
 	}
 }
-
-export const kobble = new KobbleClient();
