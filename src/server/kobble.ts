@@ -1,14 +1,14 @@
 import { KobbleClient } from "../kobble";
-import { auth } from './utils';
+import { getAuth } from './utils';
 
 const getAccessToken = async (): Promise<string> => {
-	const { accessToken } = auth();
+	const { session } = await getAuth();
 
-	if (!accessToken) {
-		throw new Error('Failed to get access token on the server. Is your app properly initialized?');
+	if (!session) {
+		throw new Error('No user session found. Please log in.');
 	}
 
-	return accessToken;
+	return session.accessToken;
 }
 
 /**

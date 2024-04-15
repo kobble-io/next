@@ -10,8 +10,6 @@ type KobbleGetAccessTokenFunction = () => Promise<string>;
 export class KobbleClient {
 	private cachedAccessToken : string | null = null;
 
-	
-
 	private makeUrl = (path: string) => {
 		return new URL(path, API_URL);
 	}

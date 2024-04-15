@@ -1,7 +1,8 @@
+import { routes } from "../constants";
 import { KobbleClient } from "../kobble";
 
 const getAccessToken = async (): Promise<string> => {
-	const res = await fetch('/getToken');
+	const res = await fetch(routes.token);
 
 	if (!res.ok) {
 		throw new Error('Failed to get access token');
