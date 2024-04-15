@@ -1,4 +1,7 @@
 export * from './provider'
 export * from './middleware'
 export * from './types'
-export * from './utils'
+export * from './kobble';
+export {
+	getAuth
+} from './utils';

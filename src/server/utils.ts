@@ -28,3 +28,11 @@ export const auth = (): KobbleAuth => {
 
 	return { user, idToken, accessToken };
 }
+
+/**
+ * Get the current user's authentication information. If the access
+ * token is expired, this function will attempt to refresh it or throw.
+ */
+export const getAuth = async () => {
+	return auth();
+}
