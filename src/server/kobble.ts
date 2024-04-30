@@ -1,4 +1,4 @@
-import { KobbleClient } from "../kobble";
+import { KobbleClient } from "../api/kobble";
 import { getAuth } from './utils';
 
 const getAccessToken = async (): Promise<string> => {

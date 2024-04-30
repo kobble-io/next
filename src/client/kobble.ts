@@ -1,5 +1,5 @@
 import { routes } from "../constants";
-import { KobbleClient } from "../kobble";
+import { KobbleClient } from "../api/kobble";
 
 const getAccessToken = async (): Promise<string> => {
 	const res = await fetch(routes.token);
@@ -18,6 +18,6 @@ const getAccessToken = async (): Promise<string> => {
  * Returns a client to access the Kobble API as the currently logged in user 
  * from the client side.
 */
-export const useKobble = () => new KobbleClient({
+export const createClientSideKobble = () => new KobbleClient({
 	getAccessToken,
 });
