@@ -1,25 +1,44 @@
-# Next SDK
+![Add authentication and monetization to your React application in minutes using Kobble](https://github.com/kobble-io/next/blob/main/.readme/banner.png?raw=true)
 
-A SDK to seamlessly integrate Kobble with your Next.js project.
+[![License](https://img.shields.io/:license-mit-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
+![Status](https://img.shields.io/:status-stable-green.svg?style=flat)
 
-## Installation
 
-```bash
-npm i @kobbleio/next
+Add authentication, monetization and permissions to your Next.js application in minutes using Kobble Next SDK.
+
+It's secure by design and easy to use.
+
+## Getting Started
+
+### Installation
+
+Using [npm](https://npmjs.org) in your project directory run the following command:
+
+```sh
+npm install @kobbleio/next
 
 # or
-pnpm i @kobbleio/next
+pnpm install @kobbleio/next
 ```
 
-## Working with the app router
+
+### Configure Kobble
+
+Create an **Application** in your [Kobble Dashboard](https://app.kobble.io/p/applications).
+
+Make sure your application can handle your localhost callback URL (see section below).
+
+Note the **Client ID** and your **Portal Domain** values.
+
+Visit our **[Quick Start Guide](https://docs.kobble.io/learning/quickstart/setup)** to learn more.
+
+### Working with the app router
 
 This SDK only supports the app router which is available since Next.js 13 and is now considered to be Next's default router.
 
 - `@kobbleio/next/server` => utilities to work on the server side (usable in server side components and route handlers)
 - `@kobbleio/next/client` => utilities to work on the client side (browser)
 - `@kobbleio/next` => utilities that can safely be used on both sides
-
-## Getting started
 
 ### Setup the middleware
 
@@ -149,3 +168,20 @@ The usage is exactly the same whether you are on the server or on the client.
 
 A working client SDK is always returned, even if the user is not authenticated. In such scenario though, most functions will throw an error if called.
 It is your responsability to make sure the user is authenticated before calling any function that requires it.
+
+### Raise an issue
+
+To provide feedback or report a bug, please [raise an issue on our issue tracker](https://github.com/kobble-io/next/issues).
+
+___
+
+## What is Kobble?
+
+<p align="center">
+  <picture>
+    <img alt="Kobble Logo" src="https://github.com/kobble-io/next/blob/main/.readme/logo.png?raw=true" width="150">
+  </picture>
+</p>
+<p align="center">
+ Kobble is the one-stop solution for monetizing modern SaaS. It allows to add authentication, monetization and permissions to any modern app in under 10 minutes.
+</p>
