@@ -1,11 +1,8 @@
 import { createContext } from "react";
 import { KobbleClient } from "../../../api/kobble";
-import { createClientSideKobble } from "../../kobble";
 
-export type AccessControlContextType = {
+export type KobbleContextType = {
 	kobble: KobbleClient;
 }
 
-export default createContext({
-	kobble: createClientSideKobble()
-});
+export default createContext<KobbleContextType | null>(null);

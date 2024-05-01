@@ -1,8 +1,14 @@
 import { useContext } from 'react';
-import kobbleContext from './context';
+import kobbleContext, { KobbleContextType } from './context';
 
 export const useKobble = () => {
-	const { kobble } = useContext(kobbleContext);
+	const ctx = useContext(kobbleContext) as KobbleContextType;
+
+	if (!ctx) {
+		throw new Error('useKobble must be used within a KobbleProvider');
+	}
+
+	const { kobble } = ctx;
 
 	return { kobble };
 }

@@ -42,9 +42,31 @@ export const config = {
 };
 ```
 
-This will automatically expose the following routes to your app:
+This middleware will automatically expose various routes to handle authentication.
 
-- `/api/kobble/login` => initiate a login flow to your Kobble portal
-- `/api/kobble/logout` => disconnect the current user from your app
-- `/api/kobble/token` => get the current user's access token, refreshing it if necessary
-- `/api/kobble/user` => get the current user's profile
+### Setup client side provider
+
+To leverage kobble utilities inside client side components, you need to wrap your app with the `KobbleProvider` component.
+This is commonly done in the top level `layout.tsx` file as shown below:
+
+```ts
+import { KobbleProvider } from "@kobbleio/next/server";
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>
+	  	<KobbleProvider>
+	  		{children}
+		</KobbleProvider>
+	  </body>
+    </html>
+  );
+}
+```
+
+Note that `KobbleProvider` itself is a server side component, and as such should not be rendered by a client component directly.
