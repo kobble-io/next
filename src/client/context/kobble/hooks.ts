@@ -6,3 +6,9 @@ export const useKobble = () => {
 
 	return { kobble };
 }
+
+export const useAssertWrappedByKobbleProvider = (componentName: string) => {
+	if (!useContext(kobbleContext)) {
+		throw new Error(`${componentName} must be wrapped by a KobbleProvider`);
+	}
+}
