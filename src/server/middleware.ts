@@ -44,6 +44,16 @@ const handleLogin = async (_: NextRequest, __: NextResponse, ___: AuthMiddleware
 	return NextResponse.redirect(authorizationUrl);
 }
 
+const handleUser = async (req: NextRequest, res: NextResponse, options: AuthMiddlewareOptions) => {
+	const { session } = await getAuth();
+
+	if (!session) {
+		return NextResponse.json({ message: 'No user session found. Please log in.' }, { ...res, status: 401 });
+	}
+
+	return NextResponse.json({ user: session.user }, res);
+}
+
 const handleOAuthCallback = async (req: NextRequest, res: NextResponse, options: AuthMiddlewareOptions) => {
 	const code = req.nextUrl.searchParams.get('code');
 
@@ -138,6 +148,7 @@ export const authMiddleware = (options: AuthMiddlewareOptions) => {
 		[routes.login]: handleLogin,
 		[routes.logout]: handleLogout,
 		[routes.token]: handleGetToken,
+		[routes.user]: handleUser,
 		[oauthCallbackPath]: handleOAuthCallback,
 	};
 
