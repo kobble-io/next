@@ -8,7 +8,9 @@
     "dev": "npm run build:swc -w",
     "types": "tsc --emitDeclarationOnly",
     "lint": "TIMING=1 eslint \"src/**/*.{ts,tsx,js,jsx}\" --fix",
-    "clean": "rm -rf dist && rm -rf .turbo"
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "buildpack": "npm run build && npm pack",
+    "buildpublish": "npm run buildpack && npm publish --access public"
   },
   "exports": {
 	  "." : {
@@ -27,7 +29,7 @@
   "files": [
     "dist"
   ],
-  "keywords": [],
+  "keywords": ["next.js", "kobble", "next authentication", "next permissions", "next ACL"],
   "author": "",
   "license": "ISC",
   "peerDependencies": {
