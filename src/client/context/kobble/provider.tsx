@@ -2,9 +2,16 @@
 
 import { ReactNode, useRef } from "react";
 import { createClientSideKobble } from "../../kobble";
-import kobbleContext from './context';
+import { createContext } from "react";
+import { KobbleClient } from "../../../api/kobble";
 
-const KobbleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export type KobbleContextType = {
+	kobble: KobbleClient;
+}
+
+export const kobbleContext = createContext<KobbleContextType | null>(null);
+
+export const KobbleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 	const kobble = useRef(createClientSideKobble());
 
 	return (
@@ -13,5 +20,3 @@ const KobbleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 		</kobbleContext.Provider>
 	)
 }
-
-export default KobbleProvider;

@@ -2,11 +2,27 @@
 
 import { PropsWithChildren, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import authContext from "./context";
 import { routes } from "../../../constants";
-import { User } from "../../../types";
+import { createContext } from 'react'
+import { User } from '../../../types';
 
-const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
+export type AuthContextValue = {
+	user: User | null;
+	logout: () => void;
+	login: () => void;
+	isAuthenticated: boolean;
+	isLoading: boolean;
+}
+
+export const authContext = createContext<AuthContextValue>({
+	user: null,
+	logout: () => {},
+	login: () => {},
+	isAuthenticated: false,
+	isLoading: true,
+});
+
+export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
 	const router = useRouter();
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);

@@ -2,10 +2,28 @@
 
 import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { useAuth, useKobble } from '../hooks';
-import accessControlContext from './context';
-import { Permission, Quota } from '../../../api/types';
+import { createContext } from "react";
+import { Permission, Quota } from "../../../api/types";
 
-const AccessControlProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export type AccessControlContextType = {
+	permissions: Permission[];
+	quotas: Quota[];
+	hasPermission: (permissionNames: string[] | string) => boolean;
+	hasRemainingQuota: (quotaNames: string[] | string) => boolean;
+	isLoading: boolean;
+	error: Error | null;
+}
+
+export const accessControlContext = createContext<AccessControlContextType>({
+	permissions: [],
+	quotas: [],
+	hasPermission: () => false,
+	hasRemainingQuota: () => false,
+	isLoading: true,
+	error: null
+});
+
+export const AccessControlProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [permissions, setPermissions] = useState<Permission[]>([]);
 	const [quotas, setQuotas] = useState<Quota[]>([]);
@@ -62,5 +80,3 @@ const AccessControlProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 		</accessControlContext.Provider>
 	);
 }
-
-export default AccessControlProvider;

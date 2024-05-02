@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import kobbleContext, { KobbleContextType } from './context';
+import { KobbleContextType, kobbleContext } from './provider';
 
 export const useKobble = () => {
 	const ctx = useContext(kobbleContext) as KobbleContextType;
