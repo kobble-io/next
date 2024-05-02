@@ -1,10 +1,10 @@
 {
   "name": "@kobbleio/next",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Next SDK for Kobble",
   "scripts": {
     "build": "npm run build:swc && pnpm types",
-	"build:swc": "swc src -d dist --copy-files",
+    "build:swc": "swc src -d dist --copy-files",
     "dev": "npm run build:swc -w",
     "types": "tsc --emitDeclarationOnly",
     "lint": "TIMING=1 eslint \"src/**/*.{ts,tsx,js,jsx}\" --fix",
@@ -13,23 +13,29 @@
     "buildpublish": "npm run buildpack && npm publish --access public"
   },
   "exports": {
-	  "." : {
-		  "import": "./dist/index.js",
-		  "types": "./dist/index.d.ts"
-	  },
-	  "./client": {
-		  "import": "./dist/client/index.js",
-		  "types": "./dist/client/index.d.ts"
-	  },
-	  "./server": {
-		  "import": "./dist/server/index.js",
-		  "types": "./dist/server/index.d.ts"
-	  }
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client/index.js",
+      "types": "./dist/client/index.d.ts"
+    },
+    "./server": {
+      "import": "./dist/server/index.js",
+      "types": "./dist/server/index.d.ts"
+    }
   },
   "files": [
     "dist"
   ],
-  "keywords": ["next.js", "kobble", "next authentication", "next permissions", "next ACL"],
+  "keywords": [
+    "next.js",
+    "kobble",
+    "next authentication",
+    "next permissions",
+    "next ACL"
+  ],
   "author": "",
   "license": "ISC",
   "peerDependencies": {
