@@ -8,8 +8,6 @@ export const SignedIn: FC<PropsWithChildren> = ({ children }) => {
 
 	const { user } = useAuth();
 
-	console.log('user', user);
-
 	if (!user) {
 		return null;
 	}

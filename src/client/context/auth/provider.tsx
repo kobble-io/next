@@ -1,7 +1,7 @@
 'use client';
 
-import { PropsWithChildren, useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { PropsWithChildren, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { routes } from "../../../constants";
 import { createContext } from 'react'
 import { User } from '../../../types';
@@ -27,9 +27,13 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const isAuthenticated = !!user && !isLoading;
+	const pathname = usePathname();
+	const previousPathname = useRef<string | null>(null);
 
 	const fetchUser = useCallback(async (): Promise<User | null>  => {
 		const res = await fetch(routes.user);
+
+		console.log('fetchUser', res.ok);
 
 		if (!res.ok) {
 			return null;
@@ -39,6 +43,10 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
 		return user;
 	}, [])
+	
+	useEffect(() => {
+		console.log('router changed');
+	}, [router])
 
 	useEffect(() => {
 		fetchUser().then((user) => {
@@ -49,7 +57,8 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
 	}, [])
 
 	const logout = () => {
-		router.replace('/logout');
+		router.replace(routes.logout);
+		setUser(null);
 	}
 
 	const login = () => {
