@@ -2,7 +2,6 @@
   "name": "@kobbleio/next",
   "version": "1.0.0",
   "description": "Next SDK for Kobble",
-  "type": "module",
   "scripts": {
     "build": "npm run build:swc && pnpm types",
 	"build:swc": "swc src -d dist --copy-files",
