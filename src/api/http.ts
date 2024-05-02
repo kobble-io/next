@@ -1,5 +1,5 @@
 //const API_URL = 'https://client-sdk-backend-mtppn576oq-uc.a.run.app';
-const API_URL = 'http://localhost:3005';
+const API_URL = 'https://client-sdk.kobble.io'
 
 export class HttpClient {
 	private cachedAccessToken : string | null = null;
