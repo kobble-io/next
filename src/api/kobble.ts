@@ -20,4 +20,8 @@ export class KobbleClient {
 		this.acl = new AccessControl(this.http, this.config.getUserId);
 		this.sdkClient = new SdkClient(this.http);
 	}
+
+	getSupabaseToken = async (): Promise<string> => {
+		return this.sdkClient.getSupabaseToken();
+	}
 }
