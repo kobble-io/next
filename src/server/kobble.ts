@@ -11,10 +11,21 @@ const getAccessToken = async (): Promise<string> => {
 	return session.accessToken;
 }
 
+const getUserId = async (): Promise<string> => {
+	const { session } = await getAuth();
+
+	if (!session) {
+		throw new Error('No user found. Please log in.');
+	}
+
+	return session.user.id;
+}
+
 /**
  * Returns a client to access the Kobble API as the currently logged in user 
  * from the server side.
 */
 export const getKobble = () => new KobbleClient({
 	getAccessToken,
+	getUserId,
 });

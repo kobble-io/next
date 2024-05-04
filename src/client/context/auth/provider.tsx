@@ -33,8 +33,6 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
 	const fetchUser = useCallback(async (): Promise<User | null>  => {
 		const res = await fetch(routes.user);
 
-		console.log('fetchUser', res.ok);
-
 		if (!res.ok) {
 			return null;
 		}
@@ -44,10 +42,6 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
 		return user;
 	}, [])
 	
-	useEffect(() => {
-		console.log('router changed');
-	}, [router])
-
 	useEffect(() => {
 		fetchUser().then((user) => {
 			setUser(user);

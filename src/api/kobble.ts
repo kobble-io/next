@@ -4,9 +4,11 @@ import { SdkClient } from "./sdk-client";
 
 type KobbleConfig = {
 	getAccessToken: KobbleGetAccessTokenFunction;
+	getUserId: KobbleGetUserIdFunction;
 }
 
 type KobbleGetAccessTokenFunction = () => Promise<string>;
+type KobbleGetUserIdFunction = () => Promise<string>;
 
 export class KobbleClient {
 	private readonly http: HttpClient;
@@ -15,7 +17,7 @@ export class KobbleClient {
 
 	constructor(private readonly config: KobbleConfig) {
 		this.http = new HttpClient(this.config.getAccessToken);
-		this.acl = new AccessControl(this.http);
+		this.acl = new AccessControl(this.http, this.config.getUserId);
 		this.sdkClient = new SdkClient(this.http);
 	}
 }

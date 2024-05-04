@@ -1,41 +1,83 @@
 import { Quota, Permission } from './types'
 import { HttpClient } from './http'
+import { Cache } from "../utils/cache";
+
+const QUOTA_CACHE_KEY = (userId: string) => `quotas-${userId}`
+const PERMISSION_CACHE_KEY = (userId: string) => `permissions-${userId}`
 
 export class AccessControl {
-  private permissions: Permission[]
-  private quotas: Quota[]
+  private permissionsCache: Cache<Permission[]>
+  private quotasCache: Cache<Quota[]>
 
   constructor(
-    private readonly http: HttpClient
+    private readonly http: HttpClient,
+    private readonly getUserId: () => Promise<string>
   ) {
-    this.permissions = []
-    this.quotas = []
+    this.permissionsCache = new Cache({
+      defaultTtl: 20 // 20 seconds
+    })
+    this.quotasCache = new Cache({
+      defaultTtl: 20 // 20 seconds
+    })
+  }
+
+  private async quotaCacheKey() {
+    const userId = await this.getUserId();
+    return QUOTA_CACHE_KEY(userId);
+  }
+
+  private async permissionCacheKey() {
+    const userId = await this.getUserId();
+    return PERMISSION_CACHE_KEY(userId);
+  }
+
+  private async getCachedPermissions() {
+    const key = await this.permissionCacheKey();
+    return this.permissionsCache.get(key);
+  }
+
+  private async getCachedQuotas() {
+    const key = await this.quotaCacheKey();
+    return this.quotasCache.get(key);
+  }
+
+  private async cachePermissions(permissions: Permission[]) {
+    const key = await this.permissionCacheKey();
+    this.permissionsCache.set(key, permissions);
+  }
+
+  private async cacheQuotas(quotas: Quota[]) {
+      const key = await this.quotaCacheKey();
+      this.quotasCache.set(key, quotas);
   }
 
   private async fetchPermissions() {
 	const { permissions } = await this.http.getJson('/permissions/list');
 
-	this.permissions = permissions;
+	await this.cachePermissions(permissions);
 
-	return this.permissions;
+	return permissions;
   }
 
   private async fetchQuotas() {
 	  const { quotas } = await this.http.getJson('/quotas/list');
 
-	  this.quotas = quotas;
+	  await this.cacheQuotas(quotas);
 
-	  return this.quotas;
+	  return quotas;
   }
 
   /**
    * Retrieves the list of permissions for the logged-in user based on the product attached to them.
    *
+   * @param {object} options (optional) - The options for the request.
+   * @param {boolean} options.noCache - If true, the method will fetch the permissions from the server instead of using the cache.
    * @returns {Promise Permission[]>} A promise that resolves to an array of Permission objects, each representing a permission for the user.
    */
-  public listPermissions(): Promise<Permission[]> {
-    if (this.permissions?.length) {
-      return Promise.resolve(this.permissions)
+  public async listPermissions(options?: { noCache?: boolean }): Promise<Permission[]> {
+    const cached = await this.getCachedPermissions();
+    if (cached?.length && !options?.noCache) {
+        return Promise.resolve(cached);
     }
 
     return this.fetchPermissions()
@@ -44,11 +86,15 @@ export class AccessControl {
   /**
    * Retrieves the list of quota usages for the logged-in user based on the product attached to them.
    *
+   * @param {object} options (optional) - The options for the request.
+   * @param {boolean} options.noCache - If true, the method will fetch the quotas from the server instead of using the cache.
    * @returns {Promise Quota[]>} A promise that resolves to an array of QuotaUsage objects, each representing a quota for the user.
    */
-  public listQuotas(): Promise<Quota[]> {
-    if (this.quotas?.length) {
-      return Promise.resolve(this.quotas)
+  public async listQuotas(options?: { noCache?: boolean }): Promise<Quota[]> {
+    const cached = await this.getCachedQuotas();
+
+    if (cached?.length && !options?.noCache) {
+        return Promise.resolve(cached);
     }
 
     return this.fetchQuotas()

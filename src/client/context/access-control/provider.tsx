@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useCallback, useEffect, useState } from 'react';
+import {ReactNode, useCallback, useEffect, useRef, useState} from 'react';
 import { useAuth, useKobble } from '../hooks';
 import { createContext } from "react";
 import { Permission, Quota } from "../../../api/types";
@@ -29,6 +29,7 @@ export const AccessControlProvider: React.FC<{ children: ReactNode }> = ({ child
 	const [quotas, setQuotas] = useState<Quota[]>([]);
 	const { kobble } = useKobble();
 	const { user } = useAuth();
+	const timerIdRef = useRef<null | ReturnType<typeof setTimeout>>(null);
 
 	const hasPermission = useCallback(
 		(permissionNames: string[] | string) => {
@@ -59,11 +60,47 @@ export const AccessControlProvider: React.FC<{ children: ReactNode }> = ({ child
 			return;
 		}
 
-		Promise.all([kobble.acl.listPermissions(), kobble.acl.listQuotas()]).then(([perms, q]) => {
-			setPermissions(perms);
-			setQuotas(q);
-			setIsLoading(false);
-		});
+		const fetchData = () => {
+			Promise.all([
+				kobble.acl.listPermissions({
+					noCache: true
+				}),
+				kobble.acl.listQuotas({
+					noCache: true
+				})
+			]).then(([perms, q]) => {
+				setPermissions(perms);
+				setQuotas(q);
+				setIsLoading(false);
+			});
+		};
+
+		const stopPolling = () => {
+			if (!timerIdRef.current) {
+				return;
+			}
+			clearInterval(timerIdRef.current);
+		};
+
+		const startPolling = () => {
+			if (timerIdRef.current) {
+				return;
+			}
+
+			pollingCallback();
+			timerIdRef.current = setInterval(pollingCallback, 5000);
+		};
+
+		const pollingCallback = async () => {
+			try {
+				await fetchData();
+			} catch (error) {
+				stopPolling();
+			}
+		};
+
+		startPolling();
+
 	}, [kobble, user]);
 
 	return (
