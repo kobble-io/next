@@ -6,6 +6,7 @@ import { routes } from "../constants";
 import { getAuth, refreshAccessToken } from "./utils";
 import { config } from "./config";
 import { jwtParseClaims } from "../utils/jwt";
+import { pathToRegexp } from "path-to-regexp";
 
 const createAuthorizationUrl = (config: AuthMiddlewareConfig): URL => {
 	const { clientId, portalUrl, redirectUri } = config;
@@ -178,7 +179,18 @@ export const authMiddleware = (options: AuthMiddlewareOptions) => {
 			return kobbleRoutes[currentPath](req, res, options);
 		}
 
-		if (session || publicRoutes.includes(currentPath)) {
+		const canAccessPath = (path: string) => {
+			if (session) {
+				return true;
+			}
+
+			return publicRoutes.some((route) => {
+				const regex = pathToRegexp(route);
+				return regex.test(path);
+			});
+		}
+
+		if (canAccessPath(currentPath)) {
 			return NextResponse.next(res);
 		} 
 
