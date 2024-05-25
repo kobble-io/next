@@ -56,7 +56,19 @@ export const AccessControlProvider: React.FC<{ children: ReactNode }> = ({ child
 	);
 
 	useEffect(() => {
+		const stopPolling = () => {
+			if (!timerIdRef.current) {
+				return;
+			}
+			clearInterval(timerIdRef.current);
+		};
+
 		if (!kobble || !user) {
+			/**
+			 * It's important to stop polling when the user is not set
+			 * to prevent errors when the user logs out.
+			 */
+			stopPolling();
 			return;
 		}
 
@@ -73,13 +85,6 @@ export const AccessControlProvider: React.FC<{ children: ReactNode }> = ({ child
 				setQuotas(q);
 				setIsLoading(false);
 			});
-		};
-
-		const stopPolling = () => {
-			if (!timerIdRef.current) {
-				return;
-			}
-			clearInterval(timerIdRef.current);
 		};
 
 		const startPolling = () => {
