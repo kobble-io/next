@@ -1,6 +1,6 @@
 {
   "name": "@kobbleio/next",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Next SDK for Kobble",
   "scripts": {
     "build": "npm run build:swc && pnpm types",
