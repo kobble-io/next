@@ -1,4 +1,5 @@
 import { User } from "../types";
+import { LogLevel } from "../utils/logger";
 
 export type KobbleServerAuthSession = {
 	user: User;
@@ -16,4 +17,5 @@ export type AuthMiddlewareOptions = {
 	unauthenticatedRedirectPath?: string;
 	loggedOutRedirectPath?: string;
 	loggedInRedirectPath?: string;
+	logLevel?: LogLevel;
 }

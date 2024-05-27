@@ -8,6 +8,7 @@ import { config } from "./config";
 import { jwtParseClaims } from "../utils/jwt";
 import { pathToRegexp } from "path-to-regexp";
 import { cookies } from "next/headers";
+import { Logger } from "../utils/logger";
 
 const createAuthorizationUrl = (config: AuthMiddlewareConfig): URL => {
 	const { clientId, portalUrl, redirectUri } = config;
@@ -143,7 +144,6 @@ const handleLogout = (req: NextRequest, _: NextResponse, options: AuthMiddleware
 	return nextRes;
 }
 
-
 export const authMiddleware = (options: AuthMiddlewareOptions) => {
 	const { publicRoutes = [], unauthenticatedRedirectPath } = options;
 	const oauthCallbackPath = new URL(config.redirectUri).pathname;
@@ -154,11 +154,20 @@ export const authMiddleware = (options: AuthMiddlewareOptions) => {
 		[routes.user]: handleUser,
 		[oauthCallbackPath]: handleOAuthCallback,
 	};
+	const logger = new Logger('KobbleMiddleware', options.logLevel ?? 'INFO');
 
 	return async (req: NextRequest): Promise<NextResponse> => {
 		const currentPath = req.nextUrl.pathname;
 		const { session } = await getAuth();
 		const res = new NextResponse(); 
+
+		if (options.logLevel === 'DEBUG') {
+			const method = req.method.padEnd(6);
+			const pathname = req.nextUrl.pathname.padEnd(30);
+			const metadata = `(user=${session?.user?.id ?? 'N/A'})}`.padStart(40);
+
+			logger.debug(`${method} ${pathname} ${metadata}`);
+		}
 
 		if (session) {
 			const payload = jwtParseClaims<{ exp: number }>(session.accessToken);
@@ -166,12 +175,17 @@ export const authMiddleware = (options: AuthMiddlewareOptions) => {
 
 			if (isNearExpiration) {
 				try {
+					logger.info('Access token expires soon, attempting refresh...')
 					const { accessToken, refreshToken, idToken  } = await refreshAccessToken(session.refreshToken);
 
 					setResponseCookies(res, accessToken, refreshToken, idToken);
 
+					logger.info('Access token refreshed successfully');
+
 					return res;
 				} catch (e) {
+					logger.error('Failed to refresh access token', e);
+
 					return handleLogout(req, res, options);
 				}
 			}
