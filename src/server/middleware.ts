@@ -7,6 +7,7 @@ import { getAuth, refreshAccessToken } from "./utils";
 import { config } from "./config";
 import { jwtParseClaims } from "../utils/jwt";
 import { pathToRegexp } from "path-to-regexp";
+import { cookies } from "next/headers";
 
 const createAuthorizationUrl = (config: AuthMiddlewareConfig): URL => {
 	const { clientId, portalUrl, redirectUri } = config;
@@ -21,22 +22,19 @@ const createAuthorizationUrl = (config: AuthMiddlewareConfig): URL => {
 	return url;
 }
 
+const laxCookieOptions = {
+	httpOnly: true,
+	secure: true,
+	// We need a lax policy because we are setting cookies after a redirect from
+	// an external domain.
+	// See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#lax
+	sameSite: 'lax',
+} as const;
+
 const setResponseCookies = (res: NextResponse, accessToken: string, refreshToken: string, idToken: string) => {
-	res.cookies.set(ACCESS_TOKEN_COOKIE_NAME, accessToken, {
-		httpOnly: true,
-		secure: true,
-		sameSite: 'strict',
-	});
-	res.cookies.set(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
-		httpOnly: true,
-		secure: true,
-		sameSite: 'strict',
-	});
-	res.cookies.set(ID_TOKEN_COOKIE_NAME, idToken, {
-		httpOnly: true,
-		secure: true,
-		sameSite: 'strict',
-	});
+	res.cookies.set(ACCESS_TOKEN_COOKIE_NAME, accessToken, laxCookieOptions);
+	res.cookies.set(REFRESH_TOKEN_COOKIE_NAME, refreshToken, laxCookieOptions);
+	res.cookies.set(ID_TOKEN_COOKIE_NAME, idToken, laxCookieOptions);
 }
 
 const handleLogin = async (_: NextRequest, __: NextResponse, ___: AuthMiddlewareOptions) => {
@@ -104,9 +102,13 @@ const handleOAuthCallback = async (req: NextRequest, res: NextResponse, options:
 	const { access_token, id_token, refresh_token } = await tokenRes.json();
 	const resUrl = req.nextUrl.clone();
 
+	for (const [k] of req.nextUrl.searchParams) {
+		resUrl.searchParams.delete(k);
+	}
+
 	resUrl.pathname = options.loggedInRedirectPath ?? '/';
 
-	const nextRes = NextResponse.redirect(resUrl);
+	const nextRes = NextResponse.redirect(resUrl, { status: 302 });
 
 	setResponseCookies(nextRes, access_token, refresh_token, id_token);
 
