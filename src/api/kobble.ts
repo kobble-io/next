@@ -14,6 +14,10 @@ export class KobbleClient {
 	private readonly http: HttpClient;
 	public readonly acl: AccessControl;
 	public readonly sdkClient: SdkClient;
+	
+	getAcl(): AccessControl {
+		return this.acl;
+	}
 
 	constructor(private readonly config: KobbleConfig) {
 		this.http = new HttpClient(this.config.getAccessToken);

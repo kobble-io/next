@@ -35,7 +35,7 @@ export const getKobble = () => new KobbleClient({
  * Returns the access control instance for the currently logged-in user.
  */
 export const getAccessControl = async (): Promise<AccessControl> => {
-	const kobble = await getKobble();
+	const kobble = getKobble();
 
-	return kobble.acl;
+	return kobble.getAcl();
 }
