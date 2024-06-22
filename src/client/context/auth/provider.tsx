@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { routes } from "../../../constants";
 import { createContext } from 'react'
 import { User } from '../../../types';
+import env from '../../env';
 
 export type AuthContextValue = {
 	user: User | null;
@@ -51,12 +52,12 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
 	}, [])
 
 	const logout = () => {
-		router.replace(routes.logout);
+		router.replace(new URL(routes.logout, env.domain).toString());
 		setUser(null);
 	}
 
 	const login = () => {
-		router.replace('/login');
+		router.replace(new URL(routes.login, env.domain).toString());
 	}
 
 	return (
