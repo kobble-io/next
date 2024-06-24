@@ -56,7 +56,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
 	}
 
 	const login = () => {
-		router.replace('/login');
+		router.replace(routes.login);
 	}
 
 	return (
