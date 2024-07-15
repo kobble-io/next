@@ -1,6 +1,6 @@
 'use client';
 
-import React, { PropsWithChildren } from 'react';
+import React from 'react';
 import { defaultButtonIfNoChild } from './utils/defaultButtonIfNoChild';
 import { LogoutButton } from './LogoutButton';
 import { useRouter } from 'next/navigation';
@@ -9,7 +9,7 @@ import { useAssertWrappedByKobbleProvider } from '../context/hooks';
 import { assertSingleChild } from './utils/assertSingleChild';
 import { executeFunctionSafely } from './utils/executeFunctionSafely';
 
-export const LoginButton: React.FC<PropsWithChildren> = ({ children, ...rest }) => {
+export const LoginButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, ...rest }) => {
 	useAssertWrappedByKobbleProvider(LogoutButton.name);
 
 	const router = useRouter();
