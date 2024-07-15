@@ -4,7 +4,6 @@ export * from './IsAllowed';
 export * from './PortalLink';
 export * from './IsForbidden';
 export * from './PricingLink';
-export * from './PortalLink';
 export * from './LogoutButton';
 export * from './LoginButton';
 export * from './ProfileLink';
